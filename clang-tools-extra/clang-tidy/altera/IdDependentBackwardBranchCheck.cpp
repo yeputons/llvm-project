@@ -127,7 +127,7 @@ void IdDependentBackwardBranchCheck::saveIdDepField(const Stmt *Statement,
       Twine("assignment of ID-dependent field ") + Field->getNameAsString());
 }
 
-void IdDependentBackwardBranchCheck::saveIdDepVarFromReference(
+void IdDependentBackwardBranchCheck::saveIdDepVarFromPotentialReference(
     const DeclRefExpr *RefExpr, const MemberExpr *MemExpr,
     const VarDecl *PotentialVar) {
   // If the variable is already in IdDepVarsMap, ignore it.
@@ -140,20 +140,26 @@ void IdDependentBackwardBranchCheck::saveIdDepVarFromReference(
   if (RefExpr) {
     const auto *RefVar = dyn_cast<VarDecl>(RefExpr->getDecl());
     // If variable isn't ID-dependent, but RefVar is.
-    if (IdDepVarsMap.find(RefVar) != IdDepVarsMap.end())
+    if (IdDepVarsMap.find(RefVar) != IdDepVarsMap.end()) {
       StringStream << "variable " << RefVar->getNameAsString();
+      IdDepVarsMap[PotentialVar] = IdDependencyRecord(
+          PotentialVar, PotentialVar->getBeginLoc(), Message);
+      return; // Optional, as we only match only one of `RefExpr` or `MemExpr`
+    }
   }
   if (MemExpr) {
     const auto *RefField = dyn_cast<FieldDecl>(MemExpr->getMemberDecl());
     // If variable isn't ID-dependent, but RefField is.
-    if (IdDepFieldsMap.find(RefField) != IdDepFieldsMap.end())
+    if (IdDepFieldsMap.find(RefField) != IdDepFieldsMap.end()) {
       StringStream << "member " << RefField->getNameAsString();
+      IdDepVarsMap[PotentialVar] = IdDependencyRecord(
+          PotentialVar, PotentialVar->getBeginLoc(), Message);
+      return;
+    }
   }
-  IdDepVarsMap[PotentialVar] =
-      IdDependencyRecord(PotentialVar, PotentialVar->getBeginLoc(), Message);
 }
 
-void IdDependentBackwardBranchCheck::saveIdDepFieldFromReference(
+void IdDependentBackwardBranchCheck::saveIdDepFieldFromPotentialReference(
     const DeclRefExpr *RefExpr, const MemberExpr *MemExpr,
     const FieldDecl *PotentialField) {
   // If the field is already in IdDepFieldsMap, ignore it.
@@ -166,16 +172,22 @@ void IdDependentBackwardBranchCheck::saveIdDepFieldFromReference(
   if (RefExpr) {
     const auto *RefVar = dyn_cast<VarDecl>(RefExpr->getDecl());
     // If field isn't ID-dependent, but RefVar is.
-    if (IdDepVarsMap.find(RefVar) != IdDepVarsMap.end())
+    if (IdDepVarsMap.find(RefVar) != IdDepVarsMap.end()) {
       StringStream << "variable " << RefVar->getNameAsString();
+      IdDepFieldsMap[PotentialField] = IdDependencyRecord(
+          PotentialField, PotentialField->getBeginLoc(), Message);
+      return; // Optional, as we only match only one of `RefExpr` or `MemExpr`
+    }
   }
   if (MemExpr) {
     const auto *RefField = dyn_cast<FieldDecl>(MemExpr->getMemberDecl());
-    if (IdDepFieldsMap.find(RefField) != IdDepFieldsMap.end())
+    if (IdDepFieldsMap.find(RefField) != IdDepFieldsMap.end()) {
       StringStream << "member " << RefField->getNameAsString();
+      IdDepFieldsMap[PotentialField] = IdDependencyRecord(
+          PotentialField, PotentialField->getBeginLoc(), Message);
+      return;
+    }
   }
-  IdDepFieldsMap[PotentialField] = IdDependencyRecord(
-      PotentialField, PotentialField->getBeginLoc(), Message);
 }
 
 IdDependentBackwardBranchCheck::LoopType
@@ -215,11 +227,11 @@ void IdDependentBackwardBranchCheck::check(
 
   // Save variables assigned to values of Id-dependent variables and fields.
   if ((RefExpr || MemExpr) && PotentialVar)
-    saveIdDepVarFromReference(RefExpr, MemExpr, PotentialVar);
+    saveIdDepVarFromPotentialReference(RefExpr, MemExpr, PotentialVar);
 
   // Save fields assigned to values of ID-dependent variables and fields.
   if ((RefExpr || MemExpr) && PotentialField)
-    saveIdDepFieldFromReference(RefExpr, MemExpr, PotentialField);
+    saveIdDepFieldFromPotentialReference(RefExpr, MemExpr, PotentialField);
 
   // The second part of the callback deals with checking if a branch inside a
   // loop is thread dependent.

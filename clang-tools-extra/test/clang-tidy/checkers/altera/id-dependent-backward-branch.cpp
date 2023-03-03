@@ -71,6 +71,8 @@ void error() {
   UnusedStruct.IDDepField = ThreadID * 2; // OK: not used in any loops
 }
 
+int foo(int);
+
 void success() {
   int accumulator = 0;
 
@@ -79,4 +81,57 @@ void success() {
       accumulator++;
     }
   }
+
+  // ==== Conditional Expressions ====
+  for (int i = 0; i < foo(0); i++) {
+    accumulator++;
+  }
+
+  int j = 0;
+  while (j < foo(0)) {
+    accumulator++;
+  }
+
+  do {
+    accumulator++;
+  } while (j < foo(0));
+
+  // ==== Assignments ====
+  int NotThreadID = foo(0);
+
+  while (j < NotThreadID) {
+    accumulator++;
+  }
+
+  do {
+    accumulator++;
+  } while (j < NotThreadID);
+
+  struct { int NotIDDepField; } Example;
+  Example.NotIDDepField = foo(0);
+
+  for (int i = 0; i < Example.NotIDDepField; i++) {
+    accumulator++;
+  }
+
+  while (j < Example.NotIDDepField) {
+    accumulator++;
+  }
+
+  do {
+    accumulator++;
+  } while (j < Example.NotIDDepField);
+
+  // ==== Inferred Assignments ====
+  int NotThreadID2 = NotThreadID * 2;
+
+  for (int i = 0; i < NotThreadID2; i++) {
+    accumulator++;
+  }
+
+  // ==== Unused Inferred Assignments ====
+  int UnusedNotThreadID = Example.NotIDDepField;
+
+  struct { int NotIDDepField; } UnusedStruct;
+  UnusedStruct.NotIDDepField = NotThreadID * 2;
 }
