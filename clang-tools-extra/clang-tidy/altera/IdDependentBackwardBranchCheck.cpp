@@ -114,7 +114,7 @@ void IdDependentBackwardBranchCheck::saveIdDepVar(const Stmt *Statement,
                                                   const VarDecl *Variable) {
   // Record that this variable is thread-dependent.
   IdDepVarsMap[Variable] =
-      IdDependencyRecord(Variable, Variable->getBeginLoc(),
+      IdDependencyRecord(Variable, Statement->getBeginLoc(),
                          Twine("assignment of ID-dependent variable ") +
                              Variable->getNameAsString());
 }

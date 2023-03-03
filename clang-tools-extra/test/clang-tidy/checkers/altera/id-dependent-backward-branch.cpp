@@ -34,6 +34,15 @@ void error() {
   // CHECK-NOTES: :[[@LINE-1]]:12: warning: backward branch (do loop) is ID-dependent due to variable reference to 'ThreadID' and may cause performance degradation [altera-id-dependent-backward-branch]
   // CHECK-NOTES: :[[@LINE-12]]:3: note: assignment of ID-dependent variable ThreadID
 
+  int ThreadIDAssigned = 0;
+  ThreadIDAssigned = get_local_id(0) * 2;
+
+  for (int i = 0; i < ThreadIDAssigned; i++) {
+    // CHECK-NOTES: :[[@LINE-1]]:19: warning: backward branch (for loop) is ID-dependent due to variable reference to 'ThreadIDAssigned' and may cause performance degradation [altera-id-dependent-backward-branch]
+    // CHECK-NOTES: :[[@LINE-4]]:3: note: assignment of ID-dependent variable ThreadIDAssigned
+    accumulator++;
+  }
+
   struct { int IDDepField; } Example;
   Example.IDDepField = get_local_id(0);
 
@@ -106,6 +115,13 @@ void success() {
   do {
     accumulator++;
   } while (j < NotThreadID);
+
+  int NotThreadIDAssigned = 0;
+  NotThreadIDAssigned = foo(0) * 2;
+
+  for (int i = 0; i < NotThreadIDAssigned; i++) {
+    accumulator++;
+  }
 
   struct { int NotIDDepField; } Example;
   Example.NotIDDepField = foo(0);
