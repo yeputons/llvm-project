@@ -68,7 +68,7 @@ void error() {
   int ThreadIDVarFromVar = ThreadID * 2;
   for (int i = 0; i < ThreadIDVarFromVar; i++) {
     // CHECK-NOTES: :[[@LINE-1]]:19: warning: backward branch (for loop) is ID-dependent due to variable reference to 'ThreadIDVarFromVar' and may cause performance degradation [altera-id-dependent-backward-branch]
-    // CHECK-NOTES: :[[@LINE-3]]:3: note: inferred assignment of ID-dependent value from ID-dependent variable ThreadID
+    // CHECK-NOTES: :[[@LINE-3]]:28: note: inferred assignment of ID-dependent value from ID-dependent variable ThreadID
     accumulator++;
   }
 
@@ -76,14 +76,14 @@ void error() {
   ThreadIDVarAssignFromVar = ThreadID * 2;
   for (int i = 0; i < ThreadIDVarAssignFromVar; i++) {
     // CHECK-NOTES: :[[@LINE-1]]:19: warning: backward branch (for loop) is ID-dependent due to variable reference to 'ThreadIDVarAssignFromVar' and may cause performance degradation [altera-id-dependent-backward-branch]
-    // CHECK-NOTES: :[[@LINE-4]]:3: note: inferred assignment of ID-dependent value from ID-dependent variable ThreadID
+    // CHECK-NOTES: :[[@LINE-3]]:30: note: inferred assignment of ID-dependent value from ID-dependent variable ThreadID
     accumulator++;
   }
 
   int ThreadIDVarFromMember = Example.IDDepField * 2;
   for (int i = 0; i < ThreadIDVarFromMember; i++) {
     // CHECK-NOTES: :[[@LINE-1]]:19: warning: backward branch (for loop) is ID-dependent due to variable reference to 'ThreadIDVarFromMember' and may cause performance degradation [altera-id-dependent-backward-branch]
-    // CHECK-NOTES: :[[@LINE-3]]:3: note: inferred assignment of ID-dependent value from ID-dependent member IDDepField
+    // CHECK-NOTES: :[[@LINE-3]]:31: note: inferred assignment of ID-dependent value from ID-dependent member IDDepField
     accumulator++;
   }
 
@@ -91,7 +91,7 @@ void error() {
   ThreadIDVarAssignFromMember = Example.IDDepField * 2;
   for (int i = 0; i < ThreadIDVarAssignFromMember; i++) {
     // CHECK-NOTES: :[[@LINE-1]]:19: warning: backward branch (for loop) is ID-dependent due to variable reference to 'ThreadIDVarAssignFromMember' and may cause performance degradation [altera-id-dependent-backward-branch]
-    // CHECK-NOTES: :[[@LINE-4]]:3: note: inferred assignment of ID-dependent value from ID-dependent member IDDepField
+    // CHECK-NOTES: :[[@LINE-3]]:33: note: inferred assignment of ID-dependent value from ID-dependent member IDDepField
     accumulator++;
   }
 
@@ -99,7 +99,7 @@ void error() {
   ExampleFromVar.IDDepFieldFromVar = ThreadID * 2;
   for (int i = 0; i < ExampleFromVar.IDDepFieldFromVar; i++) {
     // CHECK-NOTES: :[[@LINE-1]]:19: warning: backward branch (for loop) is ID-dependent due to member reference to 'IDDepFieldFromVar' and may cause performance degradation [altera-id-dependent-backward-branch]
-    // CHECK-NOTES: :[[@LINE-4]]:12: note: inferred assignment of ID-dependent member from ID-dependent variable ThreadID
+    // CHECK-NOTES: :[[@LINE-3]]:38: note: inferred assignment of ID-dependent member from ID-dependent variable ThreadID
     accumulator++;
   }
 
@@ -107,7 +107,7 @@ void error() {
   ExampleFromMember.IDDepFieldFromMember = Example.IDDepField * 2;
   for (int i = 0; i < ExampleFromMember.IDDepFieldFromMember; i++) {
     // CHECK-NOTES: :[[@LINE-1]]:19: warning: backward branch (for loop) is ID-dependent due to member reference to 'IDDepFieldFromMember' and may cause performance degradation [altera-id-dependent-backward-branch]
-    // CHECK-NOTES: :[[@LINE-4]]:12: note: inferred assignment of ID-dependent member from ID-dependent member IDDepField
+    // CHECK-NOTES: :[[@LINE-3]]:44: note: inferred assignment of ID-dependent member from ID-dependent member IDDepField
     accumulator++;
   }
 

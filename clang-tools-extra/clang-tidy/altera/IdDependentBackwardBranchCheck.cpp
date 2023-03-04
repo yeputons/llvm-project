@@ -142,8 +142,8 @@ void IdDependentBackwardBranchCheck::saveIdDepVarFromPotentialReference(
     // If variable isn't ID-dependent, but RefVar is.
     if (IdDepVarsMap.find(RefVar) != IdDepVarsMap.end()) {
       StringStream << "variable " << RefVar->getNameAsString();
-      IdDepVarsMap[PotentialVar] = IdDependencyRecord(
-          PotentialVar, PotentialVar->getBeginLoc(), Message);
+      IdDepVarsMap[PotentialVar] =
+          IdDependencyRecord(PotentialVar, RefExpr->getBeginLoc(), Message);
       return; // Optional, as we only match only one of `RefExpr` or `MemExpr`
     }
   }
@@ -152,8 +152,8 @@ void IdDependentBackwardBranchCheck::saveIdDepVarFromPotentialReference(
     // If variable isn't ID-dependent, but RefField is.
     if (IdDepFieldsMap.find(RefField) != IdDepFieldsMap.end()) {
       StringStream << "member " << RefField->getNameAsString();
-      IdDepVarsMap[PotentialVar] = IdDependencyRecord(
-          PotentialVar, PotentialVar->getBeginLoc(), Message);
+      IdDepVarsMap[PotentialVar] =
+          IdDependencyRecord(PotentialVar, MemExpr->getBeginLoc(), Message);
       return;
     }
   }
@@ -174,8 +174,8 @@ void IdDependentBackwardBranchCheck::saveIdDepFieldFromPotentialReference(
     // If field isn't ID-dependent, but RefVar is.
     if (IdDepVarsMap.find(RefVar) != IdDepVarsMap.end()) {
       StringStream << "variable " << RefVar->getNameAsString();
-      IdDepFieldsMap[PotentialField] = IdDependencyRecord(
-          PotentialField, PotentialField->getBeginLoc(), Message);
+      IdDepFieldsMap[PotentialField] =
+          IdDependencyRecord(PotentialField, RefExpr->getBeginLoc(), Message);
       return; // Optional, as we only match only one of `RefExpr` or `MemExpr`
     }
   }
@@ -183,8 +183,8 @@ void IdDependentBackwardBranchCheck::saveIdDepFieldFromPotentialReference(
     const auto *RefField = dyn_cast<FieldDecl>(MemExpr->getMemberDecl());
     if (IdDepFieldsMap.find(RefField) != IdDepFieldsMap.end()) {
       StringStream << "member " << RefField->getNameAsString();
-      IdDepFieldsMap[PotentialField] = IdDependencyRecord(
-          PotentialField, PotentialField->getBeginLoc(), Message);
+      IdDepFieldsMap[PotentialField] =
+          IdDependencyRecord(PotentialField, MemExpr->getBeginLoc(), Message);
       return;
     }
   }
