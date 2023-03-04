@@ -25,16 +25,19 @@ private:
   // Stores information necessary for printing out source of error.
   struct IdDependencyRecord {
     IdDependencyRecord(const VarDecl *Declaration, SourceLocation Location,
-                       const llvm::Twine &Message)
+                       const llvm::Twine &Message,
+                       const IdDependencyRecord *InferredFrom)
         : VariableDeclaration(Declaration), Location(Location),
-          Message(Message.str()) {}
+          Message(Message.str()), InferredFrom(InferredFrom) {}
     IdDependencyRecord(const FieldDecl *Declaration, SourceLocation Location,
-                       const llvm::Twine &Message)
+                       const llvm::Twine &Message,
+                       const IdDependencyRecord *InferredFrom)
         : FieldDeclaration(Declaration), Location(Location),
-          Message(Message.str()) {}
+          Message(Message.str()), InferredFrom(InferredFrom) {}
     IdDependencyRecord() = default;
     const VarDecl *VariableDeclaration = nullptr;
     const FieldDecl *FieldDeclaration = nullptr;
+    const IdDependencyRecord *InferredFrom = nullptr;
     SourceLocation Location;
     std::string Message;
   };
