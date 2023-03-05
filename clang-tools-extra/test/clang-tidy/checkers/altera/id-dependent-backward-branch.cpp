@@ -20,7 +20,8 @@ void error() {
   // CHECK-NOTES: :[[@LINE-1]]:12: warning: backward branch (do loop) is ID-dependent due to ID function call and may cause performance degradation [altera-id-dependent-backward-branch]
 
   // ==== Assignments ====
-  int ThreadID = get_local_id(0);
+  // `size_t` instead of `int` to match `get_local_id`'s return type exactly without implicit conversions.
+  size_t ThreadID = get_local_id(0);
 
   while (j < ThreadID) {
     // CHECK-NOTES: :[[@LINE-1]]:10: warning: backward branch (while loop) is ID-dependent due to variable reference to 'ThreadID' and may cause performance degradation [altera-id-dependent-backward-branch]
@@ -34,8 +35,8 @@ void error() {
   // CHECK-NOTES: :[[@LINE-1]]:12: warning: backward branch (do loop) is ID-dependent due to variable reference to 'ThreadID' and may cause performance degradation [altera-id-dependent-backward-branch]
   // CHECK-NOTES: :[[@LINE-12]]:3: note: assignment of ID-dependent variable ThreadID
 
-  int ThreadIDAssigned = 0;
-  ThreadIDAssigned = get_local_id(0) * 2;
+  size_t ThreadIDAssigned = 0;
+  ThreadIDAssigned = get_local_id(0) * 2;  // ensure 'get_local_id(0)' is detected as a child as well.
 
   for (int i = 0; i < ThreadIDAssigned; i++) {
     // CHECK-NOTES: :[[@LINE-1]]:19: warning: backward branch (for loop) is ID-dependent due to variable reference to 'ThreadIDAssigned' and may cause performance degradation [altera-id-dependent-backward-branch]
@@ -43,7 +44,7 @@ void error() {
     accumulator++;
   }
 
-  struct { int IDDepField; } Example;
+  struct { size_t IDDepField; } Example;
   Example.IDDepField = get_local_id(0);
 
   for (int i = 0; i < Example.IDDepField; i++) {
@@ -65,15 +66,15 @@ void error() {
   // CHECK-NOTES: :[[@LINE-18]]:3: note: assignment of ID-dependent field IDDepField
 
   // ==== Inferred Assignments ====
-  int ThreadIDVarFromVar = ThreadID * 2;
+  size_t ThreadIDVarFromVar = ThreadID * 2;
   for (int i = 0; i < ThreadIDVarFromVar; i++) {
     // CHECK-NOTES: :[[@LINE-1]]:19: warning: backward branch (for loop) is ID-dependent due to variable reference to 'ThreadIDVarFromVar' and may cause performance degradation [altera-id-dependent-backward-branch]
-    // CHECK-NOTES: :[[@LINE-3]]:28: note: inferred assignment of ID-dependent value from ID-dependent variable ThreadID
+    // CHECK-NOTES: :[[@LINE-3]]:31: note: inferred assignment of ID-dependent value from ID-dependent variable ThreadID
     // CHECK-NOTES: :[[@LINE-49]]:3: note: assignment of ID-dependent variable ThreadID
     accumulator++;
   }
 
-  int ThreadIDVarAssignFromVar;
+  size_t ThreadIDVarAssignFromVar;
   ThreadIDVarAssignFromVar = ThreadID * 2;
   for (int i = 0; i < ThreadIDVarAssignFromVar; i++) {
     // CHECK-NOTES: :[[@LINE-1]]:19: warning: backward branch (for loop) is ID-dependent due to variable reference to 'ThreadIDVarAssignFromVar' and may cause performance degradation [altera-id-dependent-backward-branch]
@@ -82,15 +83,15 @@ void error() {
     accumulator++;
   }
 
-  int ThreadIDVarFromMember = Example.IDDepField * 2;
+  size_t ThreadIDVarFromMember = Example.IDDepField * 2;
   for (int i = 0; i < ThreadIDVarFromMember; i++) {
     // CHECK-NOTES: :[[@LINE-1]]:19: warning: backward branch (for loop) is ID-dependent due to variable reference to 'ThreadIDVarFromMember' and may cause performance degradation [altera-id-dependent-backward-branch]
-    // CHECK-NOTES: :[[@LINE-3]]:31: note: inferred assignment of ID-dependent value from ID-dependent member IDDepField
+    // CHECK-NOTES: :[[@LINE-3]]:34: note: inferred assignment of ID-dependent value from ID-dependent member IDDepField
     // CHECK-NOTES: :[[@LINE-42]]:3: note: assignment of ID-dependent field IDDepField
     accumulator++;
   }
 
-  int ThreadIDVarAssignFromMember;
+  size_t ThreadIDVarAssignFromMember;
   ThreadIDVarAssignFromMember = Example.IDDepField * 2;
   for (int i = 0; i < ThreadIDVarAssignFromMember; i++) {
     // CHECK-NOTES: :[[@LINE-1]]:19: warning: backward branch (for loop) is ID-dependent due to variable reference to 'ThreadIDVarAssignFromMember' and may cause performance degradation [altera-id-dependent-backward-branch]
@@ -99,7 +100,7 @@ void error() {
     accumulator++;
   }
 
-  struct { int IDDepFieldFromVar; } ExampleFromVar;
+  struct { size_t IDDepFieldFromVar; } ExampleFromVar;
   ExampleFromVar.IDDepFieldFromVar = ThreadID * 2;
   for (int i = 0; i < ExampleFromVar.IDDepFieldFromVar; i++) {
     // CHECK-NOTES: :[[@LINE-1]]:19: warning: backward branch (for loop) is ID-dependent due to member reference to 'IDDepFieldFromVar' and may cause performance degradation [altera-id-dependent-backward-branch]
@@ -108,7 +109,7 @@ void error() {
     accumulator++;
   }
 
-  struct { int IDDepFieldFromMember; } ExampleFromMember;
+  struct { size_t IDDepFieldFromMember; } ExampleFromMember;
   ExampleFromMember.IDDepFieldFromMember = Example.IDDepField * 2;
   for (int i = 0; i < ExampleFromMember.IDDepFieldFromMember; i++) {
     // CHECK-NOTES: :[[@LINE-1]]:19: warning: backward branch (for loop) is ID-dependent due to member reference to 'IDDepFieldFromMember' and may cause performance degradation [altera-id-dependent-backward-branch]
@@ -118,9 +119,9 @@ void error() {
   }
 
   // ==== Unused Inferred Assignments ====
-  int UnusedThreadID = Example.IDDepField; // OK: not used in any loops
+  size_t UnusedThreadID = Example.IDDepField; // OK: not used in any loops
 
-  struct { int IDDepField; } UnusedStruct;
+  struct { size_t IDDepField; } UnusedStruct;
   UnusedStruct.IDDepField = ThreadID * 2; // OK: not used in any loops
 }
 
@@ -150,7 +151,7 @@ void success() {
   } while (j < foo(0));
 
   // ==== Assignments ====
-  int NotThreadID = foo(0);
+  size_t NotThreadID = foo(0);
 
   while (j < NotThreadID) {
     accumulator++;
@@ -160,14 +161,14 @@ void success() {
     accumulator++;
   } while (j < NotThreadID);
 
-  int NotThreadIDAssigned = 0;
+  size_t NotThreadIDAssigned = 0;
   NotThreadIDAssigned = foo(0) * 2;
 
   for (int i = 0; i < NotThreadIDAssigned; i++) {
     accumulator++;
   }
 
-  struct { int NotIDDepField; } Example;
+  struct { size_t NotIDDepField; } Example;
   Example.NotIDDepField = foo(0);
 
   for (int i = 0; i < Example.NotIDDepField; i++) {
@@ -183,43 +184,43 @@ void success() {
   } while (j < Example.NotIDDepField);
 
   // ==== Inferred Assignments ====
-  int NotThreadIDVarFromVar = NotThreadID * 2;
+  size_t NotThreadIDVarFromVar = NotThreadID * 2;
   for (int i = 0; i < NotThreadIDVarFromVar; i++) {
     accumulator++;
   }
 
-  int NotThreadIDVarAssignFromVar;
+  size_t NotThreadIDVarAssignFromVar;
   NotThreadIDVarAssignFromVar = NotThreadID * 2;
   for (int i = 0; i < NotThreadIDVarAssignFromVar; i++) {
     accumulator++;
   }
 
-  int NotThreadIDVarFromMember = Example.NotIDDepField * 2;
+  size_t NotThreadIDVarFromMember = Example.NotIDDepField * 2;
   for (int i = 0; i < NotThreadIDVarFromMember; i++) {
     accumulator++;
   }
 
-  int NotThreadIDVarAssignFromMember;
+  size_t NotThreadIDVarAssignFromMember;
   NotThreadIDVarAssignFromMember = Example.NotIDDepField * 2;
   for (int i = 0; i < NotThreadIDVarAssignFromMember; i++) {
     accumulator++;
   }
 
-  struct { int NotIDDepFieldFromVar; } ExampleFromVar;
+  struct { size_t NotIDDepFieldFromVar; } ExampleFromVar;
   ExampleFromVar.NotIDDepFieldFromVar = NotThreadID * 2;
   for (int i = 0; i < ExampleFromVar.NotIDDepFieldFromVar; i++) {
     accumulator++;
   }
 
-  struct { int NotIDDepFieldFromMember; } ExampleFromMember;
+  struct { size_t NotIDDepFieldFromMember; } ExampleFromMember;
   ExampleFromMember.NotIDDepFieldFromMember = Example.NotIDDepField * 2;
   for (int i = 0; i < ExampleFromMember.NotIDDepFieldFromMember; i++) {
     accumulator++;
   }
 
   // ==== Unused Inferred Assignments ====
-  int UnusedNotThreadID = Example.NotIDDepField;
+  size_t UnusedNotThreadID = Example.NotIDDepField;
 
-  struct { int NotIDDepField; } UnusedStruct;
+  struct { size_t NotIDDepField; } UnusedStruct;
   UnusedStruct.NotIDDepField = NotThreadID * 2;
 }

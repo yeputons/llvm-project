@@ -17,8 +17,9 @@ namespace clang::tidy::altera {
 void IdDependentBackwardBranchCheck::registerMatchers(MatchFinder *Finder) {
   // Prototype to identify all variables which hold a thread-variant ID.
   // First Matcher just finds all the direct assignments of either ID call.
-  const auto ThreadID = expr(hasDescendant(callExpr(callee(functionDecl(
-      anyOf(hasName("get_global_id"), hasName("get_local_id")))))));
+  const auto ThreadIDThis = callExpr(callee(
+      functionDecl(anyOf(hasName("get_global_id"), hasName("get_local_id")))));
+  const auto ThreadID = anyOf(hasDescendant(ThreadIDThis), ThreadIDThis);
 
   const auto RefVarOrField = forEachDescendant(
       stmt(anyOf(declRefExpr(to(varDecl())).bind("assign_ref_var"),
@@ -29,6 +30,8 @@ void IdDependentBackwardBranchCheck::registerMatchers(MatchFinder *Finder) {
           // Bind on actual get_local/global_id calls.
           forEachDescendant(
               stmt(
+                  // VarDecl is always a child of another DeclStmt, hence
+                  // 'hasDescendant' is sufficient
                   anyOf(declStmt(hasDescendant(varDecl(hasInitializer(ThreadID))
                                                    .bind("tid_dep_var"))),
                         binaryOperator(allOf(
@@ -60,7 +63,10 @@ void IdDependentBackwardBranchCheck::registerMatchers(MatchFinder *Finder) {
   // Second Matcher looks for branch statements inside of loops and bind on the
   // condition expression IF it either calls an ID function or has a variable
   // DeclRefExpr. DeclRefExprs are checked later to confirm whether the variable
-  // is ID-dependent.
+  // is ID-dependent. Note that `hasDescendant` is sufficient as `CondExpr` can
+  // never be a condition root because for references we have to perform
+  // lvalue-to-rvalue conversion and for function calls we have to perform
+  // size_t-to-bool conversion.
   const auto CondExpr =
       expr(anyOf(hasDescendant(callExpr(callee(functionDecl(
                                             anyOf(hasName("get_global_id"),
